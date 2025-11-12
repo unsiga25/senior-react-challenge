@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Search, X, AlertCircle, ChevronLeft, ChevronRight, Loader2, User } from 'lucide-react';
-import { fetchUsers, searchUsers } from '../services/api';
-import { GenderFilter } from '../types/user';
 import { useDebounce } from '../hooks/useDebounce';
 import { UserDetailsModal } from './UserDetailsModal';
+import { UserRow } from './UserRow';
+import { useUsers, USERS_PER_PAGE } from '../hooks/useUsers';
+import { GenderFilter } from '../types/user';
 
 /**
  * Main component that displays the users table
@@ -21,26 +21,17 @@ export function UsersList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  
+
   const debouncedSearch = useDebounce(searchTerm, 400);
-  const limit = 10;
 
   // Fetch users with React Query
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ['users', page, debouncedSearch],
-    queryFn: () =>
-      debouncedSearch
-        ? searchUsers(debouncedSearch, page, limit)
-        : fetchUsers(page, limit),
-    placeholderData: (previousData) => previousData,
-  });
+  const { data, isLoading, error, refetch, isFetching } = useUsers(page, debouncedSearch);
 
   // Client-side gender filtering
-  const filteredUsers = data?.users.filter(user => 
-    genderFilter === 'all' || user.gender === genderFilter
-  ) || [];
+  const filteredUsers =
+    data?.users.filter((user) => genderFilter === 'all' || user.gender === genderFilter) || [];
 
-  const totalPages = Math.ceil((data?.total || 0) / limit);
+  const totalPages = Math.ceil((data?.total || 0) / USERS_PER_PAGE);
 
   // Event handlers
   const handleSearchChange = (value: string) => {
@@ -158,9 +149,7 @@ export function UsersList() {
             <div className="flex flex-col items-center justify-center gap-4">
               <AlertCircle className="w-12 h-12 text-red-600" />
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                  Failed to load users
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Failed to load users</h3>
                 <p className="text-gray-600 mb-4">
                   {error instanceof Error ? error.message : 'An error occurred'}
                 </p>
@@ -244,56 +233,7 @@ export function UsersList() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredUsers.map((user) => (
-                      <tr
-                        key={user.id}
-                        onClick={() => setSelectedUserId(user.id)}
-                        className="hover:bg-gray-50 cursor-pointer transition-colors"
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            setSelectedUserId(user.id);
-                          }
-                        }}
-                        aria-label={`View details for ${user.firstName} ${user.lastName}`}
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            {user.image ? (
-                              <img
-                                src={user.image}
-                                alt=""
-                                className="w-10 h-10 rounded-full object-cover mr-3"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                                <User className="w-5 h-5 text-gray-400" />
-                              </div>
-                            )}
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {user.firstName} {user.lastName}
-                              </div>
-                              <div className="text-sm text-gray-500">@{user.username}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{user.email}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 capitalize">
-                            {user.gender}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {user.age}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {user.company?.name || '—'}
-                        </td>
-                      </tr>
+                      <UserRow key={user.id} user={user} onSelect={setSelectedUserId} />
                     ))}
                   </tbody>
                 </table>
@@ -303,12 +243,11 @@ export function UsersList() {
             {/* Pagination Controls */}
             <div className="mt-6 flex items-center justify-between">
               <div className="text-sm text-gray-700">
-                Showing <span className="font-medium">{page * limit + 1}</span>
-                {' '}-{' '}
+                Showing <span className="font-medium">{page * USERS_PER_PAGE + 1}</span> -{' '}
                 <span className="font-medium">
-                  {Math.min((page + 1) * limit, data?.total || 0)}
-                </span>
-                {' '}of <span className="font-medium">{data?.total || 0}</span> results
+                  {Math.min((page + 1) * USERS_PER_PAGE, data?.total || 0)}
+                </span>{' '}
+                of <span className="font-medium">{data?.total || 0}</span> results
               </div>
 
               <div className="flex items-center gap-2">
@@ -342,10 +281,7 @@ export function UsersList() {
 
       {/* Render User Details Modal when user is selected */}
       {selectedUserId && (
-        <UserDetailsModal
-          userId={selectedUserId}
-          onClose={() => setSelectedUserId(null)}
-        />
+        <UserDetailsModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
       )}
     </div>
   );
