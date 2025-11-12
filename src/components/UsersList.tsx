@@ -32,7 +32,7 @@ export function UsersList() {
       debouncedSearch
         ? searchUsers(debouncedSearch, page, limit)
         : fetchUsers(page, limit),
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
   // Client-side gender filtering
