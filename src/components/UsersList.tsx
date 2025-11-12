@@ -11,7 +11,7 @@ import { GenderFilter } from '../types/user';
  * Features:
  * - Server-side pagination (10 users per page)
  * - Debounced search (400ms delay)
- * - Gender filter (client-side)
+ * - Server-side gender filter
  * - User details modal
  * - Loading, error, and empty states
  */
@@ -24,12 +24,15 @@ export function UsersList() {
 
   const debouncedSearch = useDebounce(searchTerm, 400);
 
-  // Fetch users with React Query
-  const { data, isLoading, error, refetch, isFetching } = useUsers(page, debouncedSearch);
+  // Fetch users with React Query - gender filter is now server-side
+  const { data, isLoading, error, refetch, isFetching } = useUsers(
+    page,
+    debouncedSearch,
+    genderFilter,
+  );
 
-  // Client-side gender filtering
-  const filteredUsers =
-    data?.users.filter((user) => genderFilter === 'all' || user.gender === genderFilter) || [];
+  // NO client-side filtering needed - server handles everything
+  const users = data?.users || [];
 
   const totalPages = Math.ceil((data?.total || 0) / USERS_PER_PAGE);
 
@@ -165,7 +168,7 @@ export function UsersList() {
         )}
 
         {/* Empty State */}
-        {!isLoading && !error && filteredUsers.length === 0 && (
+        {!isLoading && !error && users.length === 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
             <div className="flex flex-col items-center justify-center gap-3">
               <User className="w-12 h-12 text-gray-400" />
@@ -183,7 +186,7 @@ export function UsersList() {
         )}
 
         {/* Users Table Section */}
-        {!isLoading && !error && filteredUsers.length > 0 && (
+        {!isLoading && !error && users.length > 0 && (
           <>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
               {/* Background Refetch Indicator */}
@@ -232,7 +235,7 @@ export function UsersList() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredUsers.map((user) => (
+                    {users.map((user) => (
                       <UserRow key={user.id} user={user} onSelect={setSelectedUserId} />
                     ))}
                   </tbody>
