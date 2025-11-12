@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/components/userdetailsmodal.tsx","./src/components/userslist.tsx","./src/hooks/usedebounce.ts","./src/services/api.ts","./src/types/user.ts"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/userdetailsmodal.tsx","./src/components/userrow.tsx","./src/components/userslist.tsx","./src/hooks/usedebounce.ts","./src/hooks/useusers.ts","./src/services/api.ts","./src/types/user.ts"],"version":"5.9.3"}
