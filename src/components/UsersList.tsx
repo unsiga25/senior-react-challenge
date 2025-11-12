@@ -81,7 +81,7 @@ export function UsersList() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Search by name or email..."
+                placeholder="Search by name or email only..."
                 className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 aria-label="Search users by name or email"
               />
